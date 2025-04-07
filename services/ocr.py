@@ -1,13 +1,13 @@
-# services/ocr.py
 import re
 import cv2
 import numpy as np
 import pytesseract
 from config import TESSERACT_PATH
 
-# Только если путь задан (например, на Windows)
+# Для Windows — вручную путь, для Linux — пропускаем
 if TESSERACT_PATH:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
     np_arr = np.frombuffer(image_bytes, np.uint8)
@@ -27,6 +27,12 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
 
     if matches:
         base_number = '+' + re.sub(r'[^\d]', '', matches[0])
+
+        # ❗️ Отбрасываем всё, что не +998
+        if not base_number.startswith('+998'):
+            print("DEBUG: найден номер НЕ из Узбекистана, пропускаем:", base_number)
+            return None
+
         print("DEBUG base_number:", base_number)
 
         extension = ''
@@ -38,7 +44,6 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
 
         full_number = base_number + extension
 
-        # Обрезаем до 12 цифр после +
         digits_only = re.sub(r'[^\d]', '', full_number)
         trimmed = '+' + digits_only[:12]
         print("DEBUG trimmed number:", trimmed)
