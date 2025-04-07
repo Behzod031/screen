@@ -1,11 +1,13 @@
+# services/ocr.py
 import re
 import cv2
 import numpy as np
 import pytesseract
 from config import TESSERACT_PATH
 
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
-
+# Только если путь задан (например, на Windows)
+if TESSERACT_PATH:
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
     np_arr = np.frombuffer(image_bytes, np.uint8)
@@ -20,7 +22,6 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     text = pytesseract.image_to_string(thresh, config=custom_config)
     print("DEBUG OCR TEXT:", repr(text))
 
-    # Ищем номер с + и короткие дополнительные группы
     matches = re.findall(r'\+\s*(\d[\d\s\-]*)', text)
     extras = re.findall(r'\b\d{2,4}\b', text)
 
@@ -37,7 +38,7 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
 
         full_number = base_number + extension
 
-        # Обрезаем до 12 цифр (после +)
+        # Обрезаем до 12 цифр после +
         digits_only = re.sub(r'[^\d]', '', full_number)
         trimmed = '+' + digits_only[:12]
         print("DEBUG trimmed number:", trimmed)

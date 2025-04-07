@@ -2,7 +2,7 @@ API_TOKEN = "7668495123:AAER2aqqi4gOOrDm11RTdXfQUoFl4VQeMAs"
 OPERATOR_ID = 7112971881  # ← замени на Telegram user_id
 
 # Путь к tesseract на Windows
-TESSERACT_PATH = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+TESSERACT_PATH = None
 
 ALBUM_TIMEOUT = 3                     # Секунды ожидания перед обработкой альбома
 
