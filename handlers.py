@@ -41,7 +41,7 @@ def register_handlers(dp: Dispatcher, bot: Bot):
 
         number = extract_number_from_image(image_bytes)
 
-        # DEBUG: Показать весь распознанный текст
+        # Показать весь текст OCR
         np_arr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

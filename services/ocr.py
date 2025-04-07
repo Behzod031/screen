@@ -4,7 +4,6 @@ import numpy as np
 import pytesseract
 from config import TESSERACT_PATH
 
-# Для Windows — вручную путь, для Linux — пропускаем
 if TESSERACT_PATH:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
@@ -22,35 +21,16 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     text = pytesseract.image_to_string(thresh, config=custom_config)
     print("DEBUG OCR TEXT:", repr(text))
 
-    matches = re.findall(r'\+\s*(\d[\d\s\-]*)', text)
-    extras = re.findall(r'\b\d{2,4}\b', text)
-
-    if matches:
-        base_number = '+' + re.sub(r'[^\d]', '', matches[0])
-
-        # ❗️ Отбрасываем всё, что не +998
-        if not base_number.startswith('+998'):
-            print("DEBUG: найден номер НЕ из Узбекистана, пропускаем:", base_number)
-            return None
-
-        print("DEBUG base_number:", base_number)
-
-        extension = ''
-        for extra in extras:
-            cleaned_extra = re.sub(r'\D', '', extra)
-            if cleaned_extra not in base_number and len(cleaned_extra) <= 4:
-                extension = cleaned_extra
-                break
-
-        full_number = base_number + extension
-
-        digits_only = re.sub(r'[^\d]', '', full_number)
-        trimmed = '+' + digits_only[:12]
+    # Ищем первое вхождение плюса и все цифры после него
+    match = re.search(r'\+[\d\s\-]{7,}', text)
+    if match:
+        raw_number = match.group(0)
+        digits_only = re.sub(r'[^\d]', '', raw_number)
+        trimmed = '+' + digits_only[:12]  # ← взять ровно 12 цифр после +
         print("DEBUG trimmed number:", trimmed)
 
         if 10 <= len(trimmed) <= 14:
             return trimmed
-        else:
-            print("DEBUG: trimmed номер всё ещё слишком длинный или короткий:", trimmed)
 
+    print("DEBUG: номер не найден или слишком короткий/длинный")
     return None
