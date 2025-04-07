@@ -1,4 +1,3 @@
-# handlers.py
 import asyncio
 from collections import defaultdict
 from aiogram import Bot, Dispatcher, F
@@ -41,7 +40,7 @@ def register_handlers(dp: Dispatcher, bot: Bot):
 
         number = extract_number_from_image(image_bytes)
 
-        # Показать весь текст OCR
+        # Показываем весь распознанный текст (для отладки)
         np_arr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

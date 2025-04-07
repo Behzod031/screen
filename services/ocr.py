@@ -21,11 +21,9 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     text = pytesseract.image_to_string(thresh, config=custom_config)
     print("DEBUG OCR TEXT:", repr(text))
 
-    # Удаляем пробелы, переносы, дефисы
     clean_text = text.replace('\n', '').replace(' ', '').replace('-', '')
-
-    # Ищем строго +998XXXXXXXXX
     match = re.search(r'\+998\d{9}', clean_text)
+
     if match:
         phone = match.group(0)
         print("DEBUG final number:", phone)
