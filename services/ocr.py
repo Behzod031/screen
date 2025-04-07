@@ -21,16 +21,18 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     text = pytesseract.image_to_string(thresh, config=custom_config)
     print("DEBUG OCR TEXT:", repr(text))
 
-    # Найдём первую подстроку, которая начинается с +998
+    # Найдём первую подстроку, начинающуюся с +998
     match = re.search(r'\+998[\d\s\-]{7,}', text)
     if match:
-        raw_number = match.group(0)
-        digits_only = re.sub(r'[^\d]', '', raw_number)
-        trimmed = '+' + digits_only[:12]  # +998XXXXXXXX
-        print("DEBUG trimmed number:", trimmed)
+        raw = match.group(0)
+        digits = re.sub(r'[^\d]', '', raw)
 
-        if 10 <= len(trimmed) <= 14:
-            return trimmed
+        # Ищем вхождение 998 + 9 цифр
+        match_digits = re.search(r'998\d{9}', digits)
+        if match_digits:
+            final = '+' + match_digits.group(0)
+            print("DEBUG trimmed number:", final)
+            return final
 
-    print("DEBUG: номер не найден или слишком короткий/длинный")
+    print("DEBUG: корректный +998 номер не найден")
     return None
