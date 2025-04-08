@@ -12,21 +12,21 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
+    # OCR без фильтров
     text = pytesseract.image_to_string(img)
-    print("DEBUG FULL RAW TEXT:\n", text)
+    print("DEBUG RAW OCR TEXT:\n", repr(text))
 
-    matches = re.findall(r'\+998[\d\s\-]{7,20}', text)
-    candidates = []
+    # Удаляем пробелы, переносы, тире и всё лишнее
+    cleaned_text = re.sub(r'[\s\-]', '', text)
+    digits_only = re.sub(r'[^\d]', '', cleaned_text)
+    print("DEBUG CLEANED DIGITS:", digits_only)
 
-    for match in matches:
-        digits = re.sub(r'[^\d]', '', match)
-        if digits.startswith('998') and len(digits) >= 12:
-            number = '+' + digits[:12]
-            candidates.append(number)
-
-    if candidates:
-        print("DEBUG candidates:", candidates)
-        return candidates[0]  # или можно выбрать по длине, уникальности и т.д.
+    # Ищем 998 + 9 цифр подряд
+    match = re.search(r'998\d{9}', digits_only)
+    if match:
+        final = '+' + match.group(0)
+        print("DEBUG FINAL NUMBER:", final)
+        return final
 
     print("DEBUG: номер не найден")
     return None
