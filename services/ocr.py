@@ -30,19 +30,21 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     raw_text = pytesseract.image_to_string(thresh, config=custom_config)
     print("DEBUG OCR TEXT:", repr(raw_text))
 
-    # Убираем пробелы и дефисы, делим на "блоки"
-    cleaned = raw_text.replace('\n', ' ').replace('-', ' ')
-    blocks = re.findall(r'\d{5,}', cleaned)
+    # Удаляем мусор, разбиваем на цифровые блоки
+    cleaned = raw_text.replace('\n', ' ').replace('-', ' ').replace('+', '')
+    blocks = re.findall(r'\d{3,}', cleaned)
     print("DEBUG blocks:", blocks)
 
-    # Ищем блок, начинающийся с 998 и длиной от 9 до 12
-    for block in blocks:
-        digits = re.sub(r'\D', '', block)
-        if digits.startswith('998') and 11 <= len(digits) <= 12:
-            result = '+' + digits
-            print("DEBUG final number:", result)
-            return result
+    # Склеиваем блоки, если один начинается с 998, а следующий добавляет длину
+    for i in range(len(blocks) - 1):
+        if blocks[i].startswith('998'):
+            combined = blocks[i] + blocks[i + 1]
+            digits = re.sub(r'\D', '', combined)
+            if len(digits) >= 12:
+                result = '+' + digits[:12]  # +998XXXXXXXXX
+                print("DEBUG final number:", result)
+                return result
 
-    print("DEBUG: номер не найден")
+    print("DEBUG: корректный номер не найден")
     return None
 
