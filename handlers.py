@@ -4,19 +4,15 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, BufferedInputFile
 from aiogram.filters import CommandStart
 from config import OPERATOR_ID, ALBUM_TIMEOUT
-from services.ocr import extract_number_from_image
+from ocr import extract_number_from_image
 from services.bitrix import create_lead_in_bitrix
 import pytesseract
 import cv2
 import numpy as np
+import html
 
 album_buffer = defaultdict(list)
 album_timer = {}
-
-
-def process_album(media_id, bot):
-    pass
-
 
 def register_handlers(dp: Dispatcher, bot: Bot):
     @dp.message(CommandStart())
@@ -42,15 +38,15 @@ def register_handlers(dp: Dispatcher, bot: Bot):
         file_data = await bot.download_file(file.file_path)
         image_bytes = file_data.read()
 
-        # Распознаём номер
         number = extract_number_from_image(image_bytes)
 
-        # Отладка: выводим весь текст OCR
+        # Отображаем OCR текст с защитой от спецсимволов
         np_arr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         raw_text = pytesseract.image_to_string(img)
+        safe_text = html.escape(raw_text.strip())
 
-        await message.answer(f"🧾 OCR natijasi:\n<code>{raw_text.strip()}</code>")
+        await message.answer(f"🧾 OCR natijasi:\n<code>{safe_text}</code>")
 
         if number:
             bitrix_response = await create_lead_in_bitrix(number)
