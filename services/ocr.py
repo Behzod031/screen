@@ -21,23 +21,23 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     print("DEBUG RAW OCR TEXT:\n", repr(text))
 
     clean_text = text.replace('\n', ' ').replace('-', ' ').replace('–', ' ')
-    matches = re.findall(r'(?:\+?998|\b9\d)[\d\s]{6,15}', clean_text)
+    parts = re.findall(r'[\d+]{7,}', clean_text)
 
-    candidates = []
-    for match in matches:
-        digits = re.sub(r'[^\d]', '', match)
-        if digits.startswith('998') and len(digits) == 12:
-            number = '+' + digits
-            candidates.append(number)
-        elif digits.startswith('9') and len(digits) == 9:
-            number = '+998' + digits
-            candidates.append(number)
+    # Попробуем склеить подряд блоки, начинающиеся с +998 или 998
+    joined = ""
+    for i, part in enumerate(parts):
+        joined += part
 
-    if candidates:
-        final = candidates[-1]  # Берём последний (скорее всего — от копирайтера)
-        print("DEBUG FINAL NUMBER:", final)
-        return final
+    # Вытаскиваем оттуда номер Узбекистана (12 цифр после 998)
+    matches = re.findall(r'(?:\+?)998\d{9,12}', joined)
+    if matches:
+        digits = re.sub(r'[^\d]', '', matches[-1])
+        if digits.startswith('998') and len(digits) >= 12:
+            number = '+' + digits[:12]
+            print("DEBUG FINAL NUMBER:", number)
+            return number
 
     print("DEBUG: номер не найден")
     return None
+
 
