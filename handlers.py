@@ -67,3 +67,42 @@ def register_handlers(dp: Dispatcher, bot: Bot):
                 photo=input_file,
                 caption="❗️ Raqam topilmadi yoki noto‘g‘ri formatda.\nIltimos, raqamni <b>+998</b> bilan yuboring.\nMasalan: <code>+998901234567</code>"
             )
+async def process_album(media_id, bot: Bot):
+    messages = album_buffer.pop(media_id, [])
+    album_timer.pop(media_id, None)
+
+    results = []
+    not_found = []
+
+    for idx, msg in enumerate(messages, start=1):
+        user_id = msg.from_user.id
+        photo = msg.photo[-1]
+        file = await bot.get_file(photo.file_id)
+        file_data = await bot.download_file(file.file_path)
+        image_bytes = file_data.read()
+
+        number = extract_number_from_image(image_bytes)
+        if number:
+            bitrix_response = await create_lead_in_bitrix(number)
+            if "error" in bitrix_response:
+                error_desc = bitrix_response.get("error_description", "Xatolik")
+                results.append(f"{number} (foto {idx}, xato: {error_desc})")
+            else:
+                lead_id = bitrix_response.get("result")
+                results.append(f"{number} (foto {idx}, Lider #{lead_id})")
+        else:
+            not_found.append((idx, image_bytes, user_id))
+
+    if results:
+        text_results = "\n".join(results)
+        await bot.send_message(OPERATOR_ID, f"📞 <b>Yangi lidlar:</b>\n{text_results}")
+    else:
+        await bot.send_message(OPERATOR_ID, "❗️ Hech qanday raqam topilmadi.")
+
+    for idx, img, user_id in not_found:
+        input_file = BufferedInputFile(img, filename=f"no_number_{idx}.jpg")
+        await bot.send_photo(
+            chat_id=user_id,
+            photo=input_file,
+            caption=f"❗️ Raqam topilmadi yoki noto'g'ri formatda (foto {idx}).\nMasalan: <code>+998901234567</code>"
+        )
