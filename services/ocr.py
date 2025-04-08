@@ -9,15 +9,32 @@ if TESSERACT_PATH:
 
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
+    import re
+    import pytesseract
+    import numpy as np
+    import cv2
+    from config import TESSERACT_PATH
+
+    if TESSERACT_PATH:
+        pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    # Получаем текст с изображения
-    text = pytesseract.image_to_string(img)
+    # Увеличим изображение и улучшим контраст
+    img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Убираем шум
+    gray = cv2.medianBlur(gray, 3)
+
+    # Применяем OCR с оптимальным режимом для чатов
+    custom_config = r'--oem 3 --psm 4'
+    text = pytesseract.image_to_string(gray, config=custom_config)
     print("DEBUG RAW OCR TEXT:\n", repr(text))
 
-    # Убираем пробелы и дефисы, делаем всё одной строкой
-    clean_text = text.replace('\n', ' ').replace('-', ' ').replace('\r', '')
+    # Ищем все номера
+    clean_text = text.replace('\n', ' ').replace('-', ' ')
     matches = re.findall(r'\+998[\d\s]{7,15}', clean_text)
 
     candidates = []
@@ -28,9 +45,10 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
             candidates.append(number)
 
     if candidates:
-        final = candidates[-1]  # ← берём ПОСЛЕДНИЙ найденный номер
-        print("DEBUG FINAL NUMBER (last):", final)
+        final = candidates[-1]  # ← берём последний
+        print("DEBUG FINAL NUMBER:", final)
         return final
 
     print("DEBUG: номер не найден")
     return None
+
