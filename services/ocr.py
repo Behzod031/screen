@@ -6,6 +6,8 @@ from config import TESSERACT_PATH
 
 if TESSERACT_PATH:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+else:
+    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
