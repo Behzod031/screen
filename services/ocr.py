@@ -1,32 +1,32 @@
 import re
 import pytesseract
-from config import TESSERACT_PATH
 import numpy as np
 import cv2
+from config import TESSERACT_PATH
 
-# Устанавливаем путь только если он задан
 if TESSERACT_PATH:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
-    # Преобразуем байты в изображение
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    # Получаем сырой текст без жёсткой обработки
-    raw_text = pytesseract.image_to_string(img)
-    print("DEBUG FULL RAW TEXT:\n", raw_text)
+    text = pytesseract.image_to_string(img)
+    print("DEBUG FULL RAW TEXT:\n", text)
 
-    # Ищем всё, что похоже на +998 и 9 цифр, с любыми пробелами/дефисами
-    matches = re.findall(r'\+998[\d\s\-]{7,15}', raw_text)
+    matches = re.findall(r'\+998[\d\s\-]{7,20}', text)
+    candidates = []
+
     for match in matches:
-        # Очищаем от мусора, оставляем только цифры
         digits = re.sub(r'[^\d]', '', match)
-        if digits.startswith('998') and len(digits) == 12:
-            final = '+' + digits
-            print("DEBUG FINAL NUMBER:", final)
-            return final
+        if digits.startswith('998') and len(digits) >= 12:
+            number = '+' + digits[:12]
+            candidates.append(number)
+
+    if candidates:
+        print("DEBUG candidates:", candidates)
+        return candidates[0]  # или можно выбрать по длине, уникальности и т.д.
 
     print("DEBUG: номер не найден")
     return None
