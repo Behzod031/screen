@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, BufferedInputFile
 from aiogram.filters import CommandStart
 from config import OPERATOR_ID, ALBUM_TIMEOUT
-from ocr import extract_number_from_image
+from services.ocr import extract_number_from_image
 from services.bitrix import create_lead_in_bitrix
 import pytesseract
 import cv2

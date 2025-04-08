@@ -9,6 +9,7 @@ if TESSERACT_PATH:
 
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
+
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
