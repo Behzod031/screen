@@ -4,10 +4,9 @@ import numpy as np
 import cv2
 from config import TESSERACT_PATH
 
+# Установка пути к tesseract
 if TESSERACT_PATH:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
-else:
-    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
 def extract_number_from_image(image_bytes: bytes) -> str | None:
     np_arr = np.frombuffer(image_bytes, np.uint8)
@@ -27,7 +26,7 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     candidates = []
     for match in matches:
         digits = re.sub(r'[^\d]', '', match)
-        if digits.startswith('998') and len(digits) == 12:
+        if digits.startswith('998') and 9 <= len(digits) <= 12:
             number = '+' + digits
             candidates.append(number)
         elif digits.startswith('9') and len(digits) == 9:
