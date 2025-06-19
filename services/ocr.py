@@ -9,7 +9,6 @@ if TESSERACT_PATH:
 else:
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 
-
 def extract_number_from_image(image_bytes: bytes) -> str | None:
     np_arr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -23,7 +22,7 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
     print("DEBUG RAW OCR TEXT:\n", repr(text))
 
     clean_text = text.replace('\n', ' ').replace('-', ' ').replace('–', ' ')
-    matches = re.findall(r'(?:\+?998|\b9\d)[\d\s]{6,15}', clean_text)
+    matches = re.findall(r'(?:\+?998|\b9\d)\s*\d{2,3}\s*\d{2,3}\s*\d{2,3}', clean_text)
 
     candidates = []
     for match in matches:
@@ -36,10 +35,9 @@ def extract_number_from_image(image_bytes: bytes) -> str | None:
             candidates.append(number)
 
     if candidates:
-        final = candidates[-1]  # Берём последний (скорее всего — от копирайтера)
+        final = candidates[-1]
         print("DEBUG FINAL NUMBER:", final)
         return final
 
     print("DEBUG: номер не найден")
     return None
-
